@@ -16,7 +16,7 @@ MonoBehaviour:
   boardBlocks:
   - x: 0
     y: 0
-    colorType: 01000000
+    colorType: 
     dataType: 
   - x: 1
     y: 0

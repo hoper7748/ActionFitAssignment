@@ -20,10 +20,11 @@ public class MapEditor : EditorWindow
     private int selectedColorIndex = 0;
 
     private int selectedIndex = 0;
-    private readonly string[] colorOptions = { "Red", "Orange", "Yellow", "Gray", "Purple", "Begic", "Blue", "Green", };
+    private readonly string[] colorOptions = { "None" ,"Red", "Orange", "Yellow", "Gray", "Purple", "Begic", "Blue", "Green", };
 
-    private bool[] colorSet = { false, false, false, false, false, false, false, false };
+    private static bool[] colorSet = { false, false, false, false, false, false, false, false, false };
     private readonly Color[] colors = {
+        Color.white,
         Color.red,
         new Color(1f, 0.5f, 0f), // Orange
         Color.yellow,
@@ -51,7 +52,7 @@ public class MapEditor : EditorWindow
         GUILayout.Label("사용할 색", EditorStyles.boldLabel);
         GUILayout.Space(10);
 
-        for (int i = 0; i < colorOptions.Length; i++)
+        for (int i = 1; i < colorOptions.Length; i++)
         {
             GUILayout.BeginHorizontal();
 
@@ -266,6 +267,8 @@ public class MapEditor : EditorWindow
         GUILayout.EndArea();
     }
 
+    ShapeData tempShapeData;
+    private Vector2Int selectedBoardPosition;
     private void CreateButton(EditTileData boardData)
     {
         GUI.color = SetGUIColor(boardData.color);
@@ -275,6 +278,45 @@ public class MapEditor : EditorWindow
             if (GUILayout.Button("타일", GUILayout.Width(tileSize), GUILayout.Height(tileSize)))
             {
                 Debug.Log($"좌표 {boardData.col - 1} / {boardData.row - 1}");
+                if(selectedColorIndex > 0 && CheckColorLRTB(boardData.col, boardData.row))
+                {
+                    tempShapeData = new ShapeData();
+                    selectedBoardPosition = new Vector2Int(boardData.col - 1, boardData.row - 1);
+                    tempShapeData.offset -= PlayerBlocks[(ColorType)selectedColorIndex].center - selectedBoardPosition;
+                    // 연결된 색이 있다면 현재 타일의 색을 체크 해야함 만약 색이 있다면 컨테이너에서 지워주고 색을 칠해줘야함.
+                    if (PlayerBlocks.ContainsKey(boardData.color))
+                    {
+                        Debug.Log("선택된 타일에 다른 색이 존재");
+                        foreach(var item in PlayerBlocks[boardData.color].shapes)
+                        {
+                            if(item.offset + PlayerBlocks[boardData.color].center == selectedBoardPosition)
+                            {
+                                PlayerBlocks[boardData.color].shapes.Remove(item);
+                                break;
+                            }
+                        }
+                    }
+                    boardData.color = (ColorType)selectedColorIndex;
+                    // 연결된 색이 없으면 그냥 색 칠하고 Shape에 추가;
+                    if (selectedColorIndex > 0 && !PlayerBlocks[(ColorType)selectedColorIndex].shapes.Contains(tempShapeData))
+                        PlayerBlocks[(ColorType)selectedColorIndex].shapes.Add(tempShapeData);
+                }
+                else if(selectedColorIndex == 0)
+                {
+                    if (PlayerBlocks.ContainsKey(boardData.color))
+                    {
+                        Debug.Log("선택된 타일에 다른 색이 존재");
+                        foreach (var item in PlayerBlocks[boardData.color].shapes)
+                        {
+                            if (item.offset + PlayerBlocks[boardData.color].center == selectedBoardPosition)
+                            {
+                                PlayerBlocks[boardData.color].shapes.Remove(item);
+                                break;
+                            }
+                        }
+                    }
+                    boardData.color = (ColorType)selectedColorIndex;
+                }
             }
         }
         else if (!(boardData.row == 0 && boardData.col == 0) && !(boardData.row == 0 && boardData.col == column + 2) &&
@@ -289,6 +331,38 @@ public class MapEditor : EditorWindow
         {
             GUILayout.Space(tileSize + tileSize * 0.15f) ;
         }
+    }
+
+    private bool CheckColorLRTB(int x, int y)
+    {
+        // 4방향 중 같은 색상과 연결이 된다면?
+        // 또는 연결된 색상이 없다면?
+        if(x > 0 && x < column + 2 && tileData[y][x].color == (ColorType)selectedColorIndex )
+        {
+            Debug.Log("FF");
+            return true;
+        }
+        else if (x > 0 && x < column + 2 && tileData[y][x + 1].color == (ColorType)selectedColorIndex)
+        {
+            Debug.Log("AA");
+            return true;
+        }
+        else if (x > 0 && x < column + 2 && tileData[y][x - 1].color == (ColorType)selectedColorIndex)
+        {
+            Debug.Log("BB");
+            return true;
+        }
+        else if (y > 0 && y < row + 2 && tileData[y + 1][x ].color == (ColorType)selectedColorIndex)
+        {
+            Debug.Log("CC");
+            return true;
+        }
+        else if (y > 0 && y < row + 2 && tileData[y - 1][x ].color == (ColorType)selectedColorIndex)
+        {
+            Debug.Log("DD");
+            return true;
+        }
+        return false;
     }
 
 
@@ -318,13 +392,6 @@ public class MapEditor : EditorWindow
                 break;
         }
         return Color.white;
-    }
-
-    private void CheckColorLRTB(int x, int y)
-    {
-        // 4방향 중 같은 색상과 연결이 된다면?
-        // 또는 연결된 색상이 없다면?
-        //if (tileData[y][x])
     }
 
     public List<List<EditTileData>> tileData = new List<List<EditTileData>>();
@@ -393,7 +460,7 @@ public class MapEditor : EditorWindow
                 // PlayerBlock
                 foreach( var pBlocks in currentLevelDataSO.playingBlocks)
                 {
-                    PlayerBlocks.Add(pBlocks.colorType, pBlocks.shapes);
+                    PlayerBlocks.Add(pBlocks.colorType, pBlocks);
                     colorSet[(int)pBlocks.colorType - 1] = true;
 
                     foreach(var shapes in pBlocks.shapes)
@@ -405,7 +472,7 @@ public class MapEditor : EditorWindow
         }
     }
 
-    Dictionary<ColorType, List<ShapeData>> PlayerBlocks = new Dictionary<ColorType, List<ShapeData>>();
+    Dictionary<ColorType, PlayingBlockData> PlayerBlocks = new Dictionary<ColorType, PlayingBlockData>();
     //Dictionary<ColorType, List<WallData>>
 
     List<WallData> WallContainer = new List<WallData>();
