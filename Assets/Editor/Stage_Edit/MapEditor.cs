@@ -317,6 +317,10 @@ public class MapEditor : EditorWindow
                     }
                     boardData.color = (ColorType)selectedColorIndex;
                 }
+                else if(selectedColorIndex > 0 && !PlayerBlocks.ContainsKey((ColorType)selectedColorIndex))
+                {
+                    tempShapeData = new ShapeData();
+                }
             }
         }
         else if (!(boardData.row == 0 && boardData.col == 0) && !(boardData.row == 0 && boardData.col == column + 2) &&
