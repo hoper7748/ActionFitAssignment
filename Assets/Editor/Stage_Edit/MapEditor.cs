@@ -18,14 +18,20 @@ public class MapEditor : EditorWindow
     private int row, column;
     private BoardBlockData temp;
     private int selectedColorIndex = 0;
-    private readonly string[] colorOptions = { "Green", "Red", "Blue", "Yellow", "Orange", "Pink" };
-    private Color[] colors = {
-        Color.green,
+
+    private int selectedIndex = 0;
+    private readonly string[] colorOptions = { "Red", "Orange", "Yellow", "Gray", "Purple", "Begic", "Blue", "Green", };
+
+    private bool[] colorSet = { false, false, false, false, false, false, false, false };
+    private readonly Color[] colors = {
         Color.red,
-        Color.blue,
-        Color.yellow,
         new Color(1f, 0.5f, 0f), // Orange
-        new Color(1f, 0.4f, 0.7f) // Pink
+        Color.yellow,
+        new Color(0.5f, 0.5f, 0.5f),     // Gray
+        new Color(0.6f, 0f, 0.6f),       // Purple
+        new Color(0.96f, 0.96f, 0.86f),  // Begic
+        Color.blue,
+        Color.green,
     };
 
     [MenuItem("Tools/Map Editor", false, 0)]
@@ -38,7 +44,40 @@ public class MapEditor : EditorWindow
     private void OnGUI()
     {
         Draw();
+    }
 
+    private void ColorSetting()
+    {
+        GUILayout.Label("사용할 색", EditorStyles.boldLabel);
+        GUILayout.Space(10);
+
+        for (int i = 0; i < colorOptions.Length; i++)
+        {
+            GUILayout.BeginHorizontal();
+
+            // 색 미리보기 박스
+            Color originalColor = GUI.color;
+            GUI.color = colors[i];
+            GUILayout.Box("", GUILayout.Width(20), GUILayout.Height(20));
+            GUI.color = originalColor;
+
+            // 색 이름과 선택 버튼
+            GUILayout.Label(colorOptions[i], GUILayout.Width(100));
+
+            if (colorSet[i])
+            {
+                if (GUILayout.Button("< 선택됨", EditorStyles.boldLabel))
+                {
+                    colorSet[i] = false;
+                }
+            }
+            else if (GUILayout.Button("선택", GUILayout.Width(60)))
+            {
+                colorSet[i] = true;
+            }
+
+            GUILayout.EndHorizontal();
+        }
     }
     private void InitData()
     {
@@ -106,7 +145,7 @@ public class MapEditor : EditorWindow
 
     private void DrawEditor()
     {
-        GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(500));
+        GUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(700));
 
         var style = new GUIStyle
         {
@@ -141,6 +180,7 @@ public class MapEditor : EditorWindow
 
         GUILayout.EndHorizontal();
 
+        ColorSetting();
 
         selectedColorIndex = EditorGUILayout.Popup("색상", selectedColorIndex, colorOptions, GUILayout.Width(200));
 
@@ -207,24 +247,50 @@ public class MapEditor : EditorWindow
 
     private void NewDrawBoard()
     {
-        if (tileData.Count < 0)
+        if (tileData.Count <= 0)
             return;
-        // 일단 띄우는 것부터 해봐 뭐부터? 바닥부터 그려봐
-        GUILayout.Space(tileSize * 0.5f);
-        GUILayout.BeginHorizontal();
-        GUILayout.Space(tileSize * 0.5f);
-        for(int x = 0; x <= column+ 2; x++)
+
+        int boardPixelWidth = (column + 4) * tileSize;
+
+        // 버튼 UI 영역 시작 (왼쪽 상단 고정)
+        GUILayout.BeginArea(new Rect(300, 100, boardPixelWidth, 9999)); // x=10으로 왼쪽 정렬
+        for (int y = row + 2; y >= 0; y--)
         {
-            GUILayout.BeginVertical();   // 새 가로줄 시작
-            for (int y = row + 2; y >= 0; y--)
+            GUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
+            for (int x = 0; x <= column + 2; x++)
             {
                 CreateButton(tileData[y][x]);
             }
-            GUILayout.EndHorizontal(); // 이전 가로줄 닫기
+            GUILayout.EndHorizontal();
         }
-        GUILayout.EndHorizontal();  
-        GUILayout.Space(tileSize * 0.5f);
+        GUILayout.EndArea();
     }
+
+    private void CreateButton(EditTileData boardData)
+    {
+        GUI.color = SetGUIColor(boardData.color);
+
+        if (boardData.row > 0 && boardData.col > 0 && boardData.col < column + 2 && boardData.row < row + 2)
+        {
+            if (GUILayout.Button("타일", GUILayout.Width(tileSize), GUILayout.Height(tileSize)))
+            {
+                Debug.Log($"좌표 {boardData.col - 1} / {boardData.row - 1}");
+            }
+        }
+        else if (!(boardData.row == 0 && boardData.col == 0) && !(boardData.row == 0 && boardData.col == column + 2) &&
+                 !(boardData.row == row + 2 && boardData.col == 0) && !(boardData.row == row + 2 && boardData.col == column + 2))
+        {
+            if (GUILayout.Button("벽", GUILayout.Width(tileSize), GUILayout.Height(tileSize)))
+            {
+                Debug.Log($"벽 : {boardData.col} / {boardData.row}");
+            }
+        }
+        else
+        {
+            GUILayout.Space(tileSize + tileSize * 0.15f) ;
+        }
+    }
+
 
     private Color SetGUIColor(ColorType color)
     {
@@ -241,7 +307,7 @@ public class MapEditor : EditorWindow
             case ColorType.Gray:
                 return Color.gray;
             case ColorType.Purple:
-                return new Color(1f, 0.4f, 0.7f); // Pink
+                return new Color(0.6f, 0f, 0.6f); // Pink
             case ColorType.Beige:
                 return new Color(0.96f, 0.96f, 0.86f);
             case ColorType.Blue:
@@ -252,38 +318,6 @@ public class MapEditor : EditorWindow
                 break;
         }
         return Color.white;
-    }
-
-    private void CreateButton(EditTileData boardData)
-    {
-        GUI.color = SetGUIColor(boardData.color);
-        if (boardData.row > 0 && boardData.col > 0 && boardData.col < column + 2 && boardData.row < row + 2)
-        {
-            if (GUILayout.Button("타일", GUILayout.Width(tileSize), GUILayout.Height(tileSize)))
-            {
-                // 색 입히는데 조건에 맞게 색을 입혀야함.
-                // 위, 아래, 오른쪽 왼쪽 
-                if (boardData.row > 0 && boardData.col > 0 && boardData.col < column + 2 && boardData.row < row + 2)
-                    Debug.Log($"좌표 {boardData.col - 1} / {boardData.row - 1}");
-                else
-                    Debug.Log($"벽 : {boardData.col} / {boardData.row}");
-            }
-        }
-        else if(!(boardData.row == 0 && boardData.col == 0) && !(boardData.row == 0 && boardData.col == column + 2) && 
-            !(boardData.row == row + 2 && boardData.col == 0) && !(boardData.row == row + 2 && boardData.col == column + 2))
-        {
-            if (GUILayout.Button("벽", GUILayout.Width(tileSize), GUILayout.Height(tileSize)))
-            {
-                if (boardData.row > 0 && boardData.col > 0 && boardData.col < column + 2 && boardData.row < row + 2)
-                    Debug.Log($"좌표 {boardData.col - 1} / {boardData.row - 1}");
-                else
-                    Debug.Log($"벽 : {boardData.col} / {boardData.row}");
-            }
-        }
-        else
-        {
-            GUILayout.Space(tileSize + tileSize * 0.1f);
-        }
     }
 
     private void CheckColorLRTB(int x, int y)
@@ -351,10 +385,16 @@ public class MapEditor : EditorWindow
                 }
                 PlayerBlocks.Clear();
 
+                for(int i =0; i  < colorSet.Length; i++)
+                {
+                    colorSet[i] = false;
+                }
+
                 // PlayerBlock
                 foreach( var pBlocks in currentLevelDataSO.playingBlocks)
                 {
                     PlayerBlocks.Add(pBlocks.colorType, pBlocks.shapes);
+                    colorSet[(int)pBlocks.colorType - 1] = true;
 
                     foreach(var shapes in pBlocks.shapes)
                     {
