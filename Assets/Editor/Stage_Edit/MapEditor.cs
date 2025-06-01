@@ -4,6 +4,7 @@ using System.IO;
 using Unity.VisualScripting;
 using Unity.VisualScripting.YamlDotNet.Serialization;
 using UnityEditor;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.WSA;
 using TextAsset = UnityEngine.TextAsset;
@@ -19,9 +20,13 @@ public class MapEditor : EditorWindow
     private BoardBlockData temp;
     private int selectedColorIndex = 0;
 
-    private int selectedIndex = 0;
-    private readonly string[] colorOptions = { "None" ,"Red", "Orange", "Yellow", "Gray", "Purple", "Begic", "Blue", "Green", };
+    private EditTileData currentData;
 
+    private int selectedIndex = 0;
+
+    private readonly string[] colorOptions = { "None" ,"Red", "Orange", "Yellow", "Gray", "Purple", "Begic", "Blue", "Green", };
+    private readonly string[] gimmikOptions = { "None",};
+    private static bool[] gimmikSet = { false };
     private static bool[] colorSet = { false, false, false, false, false, false, false, false, false };
     private readonly Color[] colors = {
         Color.white,
@@ -67,7 +72,7 @@ public class MapEditor : EditorWindow
 
             if (colorSet[i])
             {
-                if (GUILayout.Button("< 선택됨", EditorStyles.boldLabel))
+                if (GUILayout.Button("< 선택됨", EditorStyles.boldLabel, GUILayout.Width(80)))
                 {
                     colorSet[i] = false;
                 }
@@ -183,8 +188,6 @@ public class MapEditor : EditorWindow
 
         ColorSetting();
 
-        selectedColorIndex = EditorGUILayout.Popup("색상", selectedColorIndex, colorOptions, GUILayout.Width(200));
-
         GUILayout.Space(10f);
 
         if (GUILayout.Button("Create Map", GUILayout.Width(250), GUILayout.Height(tileSize)))
@@ -194,8 +197,110 @@ public class MapEditor : EditorWindow
 
         NewDrawBoard();
 
-        //DrawWall();
-    
+        GUILayout.Space(10f);
+
+        GUILayout.Label("선택");
+
+        if (currentData != null)
+        {
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(new GUIContent("column"),
+                GUILayout.Width(EditorGUIUtility.labelWidth));
+            EditorGUILayout.LabelField(currentData.col.ToString());
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(new GUIContent("row"),
+                GUILayout.Width(EditorGUIUtility.labelWidth));
+            EditorGUILayout.LabelField(currentData.row.ToString());
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField(new GUIContent("color"),
+                GUILayout.Width(EditorGUIUtility.labelWidth));
+            EditorGUILayout.LabelField(colorOptions[(int)currentData.color]);
+
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+
+            EditorGUILayout.LabelField(new GUIContent("Gimmik")/*, GUILayout.Width(50)*/);
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginVertical();
+            for (int i = 0; i < gimmikSet.Length; i++)
+            {
+                GUILayout.BeginHorizontal();
+
+                // 체크박스로 선택 여부 표시
+                gimmikSet[i] = GUILayout.Toggle(gimmikSet[i], "선택", GUILayout.Width(80));
+
+                GUILayout.Label(gimmikOptions[i], GUILayout.Width(100)); // 선택된 컬러 이름 표시 (예시)
+
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndVertical();
+
+            // 원하는 위치에 Rect 생성 (x, y, width, height)
+            Rect popupRect = new Rect(190, 495, 75, 20);
+            // 팝업 직접 그리기
+            selectedColorIndex = EditorGUI.Popup(popupRect, selectedColorIndex, colorOptions);
+
+            if (selectedColorIndex > 0 && CheckColorLRTB(currentData.col, currentData.row))
+            {
+                tempShapeData = new ShapeData();
+                selectedBoardPosition = new Vector2Int(currentData.col - 1, currentData.row - 1);
+                tempShapeData.offset -= PlayerBlocks[(ColorType)selectedColorIndex].center - selectedBoardPosition;
+                // 연결된 색이 있다면 현재 타일의 색을 체크 해야함 만약 색이 있다면 컨테이너에서 지워주고 색을 칠해줘야함.
+                if (PlayerBlocks.ContainsKey(currentData.color))
+                {
+                    Debug.Log("선택된 타일에 다른 색이 존재");
+                    foreach (var item in PlayerBlocks[currentData.color].shapes)
+                    {
+                        if (item.offset + PlayerBlocks[currentData.color].center == selectedBoardPosition)
+                        {
+                            PlayerBlocks[currentData.color].shapes.Remove(item);
+                            break;
+                        }
+                    }
+                }
+                currentData.color = (ColorType)selectedColorIndex;
+                // 연결된 색이 없으면 그냥 색 칠하고 Shape에 추가;
+                if (selectedColorIndex > 0 && !PlayerBlocks[(ColorType)selectedColorIndex].shapes.Contains(tempShapeData))
+                    PlayerBlocks[(ColorType)selectedColorIndex].shapes.Add(tempShapeData);
+            }
+            else if (selectedColorIndex == 0)
+            {
+                if (PlayerBlocks.ContainsKey(currentData.color))
+                {
+                    Debug.Log("선택된 타일에 다른 색이 존재");
+                    foreach (var item in PlayerBlocks[currentData.color].shapes)
+                    {
+                        if (item.offset + PlayerBlocks[currentData.color].center == selectedBoardPosition)
+                        {
+                            PlayerBlocks[currentData.color].shapes.Remove(item);
+                            break;
+                        }
+                    }
+                }
+                currentData.color = (ColorType)selectedColorIndex;
+            }
+            else if (selectedColorIndex > 0 && !PlayerBlocks.ContainsKey((ColorType)selectedColorIndex))
+            {
+                //PlayingBlockData data = new PlayingBlockData();
+                //data.center = new Vector2Int(boardData.col, boardData.row);
+                //tempShapeData = new ShapeData();
+                //tempShapeData.offset = Vector2Int.zero;
+                //data.shapes = new List<ShapeData>();
+                //data.shapes.Add(tempShapeData);
+                //PlayerBlocks.Add((ColorType)selectedColorIndex, data);
+
+                //boardData.color = (ColorType)selectedColorIndex;
+                Debug.Log("EmptyColor");
+            }
+        }
+
         GUILayout.EndVertical();
 
     }
@@ -227,6 +332,7 @@ public class MapEditor : EditorWindow
         public int row, col;
         public ColorType color;
         public List<ColorType> colorTypes;
+        public List<GimmickData> gimmicks;
         public int dataType;
 
         // wall일 경우 사용할 데이터
@@ -278,49 +384,60 @@ public class MapEditor : EditorWindow
             if (GUILayout.Button("타일", GUILayout.Width(tileSize), GUILayout.Height(tileSize)))
             {
                 Debug.Log($"좌표 {boardData.col - 1} / {boardData.row - 1}");
-                if(selectedColorIndex > 0 && CheckColorLRTB(boardData.col, boardData.row))
-                {
-                    tempShapeData = new ShapeData();
-                    selectedBoardPosition = new Vector2Int(boardData.col - 1, boardData.row - 1);
-                    tempShapeData.offset -= PlayerBlocks[(ColorType)selectedColorIndex].center - selectedBoardPosition;
-                    // 연결된 색이 있다면 현재 타일의 색을 체크 해야함 만약 색이 있다면 컨테이너에서 지워주고 색을 칠해줘야함.
-                    if (PlayerBlocks.ContainsKey(boardData.color))
-                    {
-                        Debug.Log("선택된 타일에 다른 색이 존재");
-                        foreach(var item in PlayerBlocks[boardData.color].shapes)
-                        {
-                            if(item.offset + PlayerBlocks[boardData.color].center == selectedBoardPosition)
-                            {
-                                PlayerBlocks[boardData.color].shapes.Remove(item);
-                                break;
-                            }
-                        }
-                    }
-                    boardData.color = (ColorType)selectedColorIndex;
-                    // 연결된 색이 없으면 그냥 색 칠하고 Shape에 추가;
-                    if (selectedColorIndex > 0 && !PlayerBlocks[(ColorType)selectedColorIndex].shapes.Contains(tempShapeData))
-                        PlayerBlocks[(ColorType)selectedColorIndex].shapes.Add(tempShapeData);
-                }
-                else if(selectedColorIndex == 0)
-                {
-                    if (PlayerBlocks.ContainsKey(boardData.color))
-                    {
-                        Debug.Log("선택된 타일에 다른 색이 존재");
-                        foreach (var item in PlayerBlocks[boardData.color].shapes)
-                        {
-                            if (item.offset + PlayerBlocks[boardData.color].center == selectedBoardPosition)
-                            {
-                                PlayerBlocks[boardData.color].shapes.Remove(item);
-                                break;
-                            }
-                        }
-                    }
-                    boardData.color = (ColorType)selectedColorIndex;
-                }
-                else if(selectedColorIndex > 0 && !PlayerBlocks.ContainsKey((ColorType)selectedColorIndex))
-                {
-                    tempShapeData = new ShapeData();
-                }
+                currentData = boardData;
+                selectedColorIndex = (int)currentData.color;
+                //if(selectedColorIndex > 0 && CheckColorLRTB(boardData.col, boardData.row))
+                //{
+                //    tempShapeData = new ShapeData();
+                //    selectedBoardPosition = new Vector2Int(boardData.col - 1, boardData.row - 1);
+                //    tempShapeData.offset -= PlayerBlocks[(ColorType)selectedColorIndex].center - selectedBoardPosition;
+                //    // 연결된 색이 있다면 현재 타일의 색을 체크 해야함 만약 색이 있다면 컨테이너에서 지워주고 색을 칠해줘야함.
+                //    if (PlayerBlocks.ContainsKey(boardData.color))
+                //    {
+                //        Debug.Log("선택된 타일에 다른 색이 존재");
+                //        foreach(var item in PlayerBlocks[boardData.color].shapes)
+                //        {
+                //            if(item.offset + PlayerBlocks[boardData.color].center == selectedBoardPosition)
+                //            {
+                //                PlayerBlocks[boardData.color].shapes.Remove(item);
+                //                break;
+                //            }
+                //        }
+                //    }
+                //    boardData.color = (ColorType)selectedColorIndex;
+                //    // 연결된 색이 없으면 그냥 색 칠하고 Shape에 추가;
+                //    if (selectedColorIndex > 0 && !PlayerBlocks[(ColorType)selectedColorIndex].shapes.Contains(tempShapeData))
+                //        PlayerBlocks[(ColorType)selectedColorIndex].shapes.Add(tempShapeData);
+                //}
+                //else if(selectedColorIndex == 0)
+                //{
+                //    if (PlayerBlocks.ContainsKey(boardData.color))
+                //    {
+                //        Debug.Log("선택된 타일에 다른 색이 존재");
+                //        foreach (var item in PlayerBlocks[boardData.color].shapes)
+                //        {
+                //            if (item.offset + PlayerBlocks[boardData.color].center == selectedBoardPosition)
+                //            {
+                //                PlayerBlocks[boardData.color].shapes.Remove(item);
+                //                break;
+                //            }
+                //        }
+                //    }
+                //    boardData.color = (ColorType)selectedColorIndex;
+                //}
+                //else if(selectedColorIndex > 0 && !PlayerBlocks.ContainsKey((ColorType)selectedColorIndex))
+                //{
+                //    //PlayingBlockData data = new PlayingBlockData();
+                //    //data.center = new Vector2Int(boardData.col, boardData.row);
+                //    //tempShapeData = new ShapeData();
+                //    //tempShapeData.offset = Vector2Int.zero;
+                //    //data.shapes = new List<ShapeData>();
+                //    //data.shapes.Add(tempShapeData);
+                //    //PlayerBlocks.Add((ColorType)selectedColorIndex, data);
+
+                //    //boardData.color = (ColorType)selectedColorIndex;
+                //    //Debug.Log("EmptyColor");
+                //}
             }
         }
         else if (!(boardData.row == 0 && boardData.col == 0) && !(boardData.row == 0 && boardData.col == column + 2) &&
@@ -329,6 +446,7 @@ public class MapEditor : EditorWindow
             if (GUILayout.Button("벽", GUILayout.Width(tileSize), GUILayout.Height(tileSize)))
             {
                 Debug.Log($"벽 : {boardData.col} / {boardData.row}");
+                currentData = null;
             }
         }
         else
