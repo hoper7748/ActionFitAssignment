@@ -25,8 +25,8 @@ public class MapEditor : EditorWindow
     private int selectedIndex = 0;
 
     private readonly string[] colorOptions = { "None" ,"Red", "Orange", "Yellow", "Gray", "Purple", "Begic", "Blue", "Green", };
-    private readonly string[] gimmikOptions = { "None",};
-    private static bool[] gimmikSet = { false };
+    private readonly string[] gimmickOptions = { "None",};
+    private static bool[] gimmickSet = { false };
     private static bool[] colorSet = { false, false, false, false, false, false, false, false, false };
     private readonly Color[] colors = {
         Color.white,
@@ -223,24 +223,7 @@ public class MapEditor : EditorWindow
 
             GUILayout.EndHorizontal();
 
-            GUILayout.BeginHorizontal();
-
-            EditorGUILayout.LabelField(new GUIContent("Gimmik")/*, GUILayout.Width(50)*/);
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginVertical();
-            for (int i = 0; i < gimmikSet.Length; i++)
-            {
-                GUILayout.BeginHorizontal();
-
-                // 체크박스로 선택 여부 표시
-                gimmikSet[i] = GUILayout.Toggle(gimmikSet[i], "선택", GUILayout.Width(80));
-
-                GUILayout.Label(gimmikOptions[i], GUILayout.Width(100)); // 선택된 컬러 이름 표시 (예시)
-
-                GUILayout.EndHorizontal();
-            }
-            GUILayout.EndVertical();
+            GimmickSet();
 
             // 원하는 위치에 Rect 생성 (x, y, width, height)
             Rect popupRect = new Rect(190, 495, 75, 20);
@@ -303,6 +286,45 @@ public class MapEditor : EditorWindow
 
         GUILayout.EndVertical();
 
+    }
+
+    private void GimmickSet()
+    {
+        GUILayout.BeginHorizontal();
+
+        EditorGUILayout.LabelField(new GUIContent("Gimmick")/*, GUILayout.Width(50)*/);
+        GUILayout.EndHorizontal();
+
+        GUILayout.BeginVertical();
+        bool prev = false;
+        bool cur = false;
+        for (int i = 0; i < gimmickSet.Length; i++)
+        {
+            GUILayout.BeginHorizontal();
+
+            prev = gimmickSet[i];
+            // 체크박스로 선택 여부 표시
+            cur = GUILayout.Toggle(gimmickSet[i], "선택", GUILayout.Width(80));
+            
+            if(prev != cur )
+            {
+                gimmickSet[i] = cur;
+                if(cur)
+                {
+                    // 기믹 추가 
+
+                }
+                else
+                {
+                    // 기믹 제거
+
+                }
+            }
+            GUILayout.Label(gimmickOptions[i], GUILayout.Width(100));
+
+            GUILayout.EndHorizontal();
+        }
+        GUILayout.EndVertical();
     }
 
     private void DrawWall()
@@ -385,6 +407,17 @@ public class MapEditor : EditorWindow
             {
                 Debug.Log($"좌표 {boardData.col - 1} / {boardData.row - 1}");
                 currentData = boardData;
+                foreach(var item in boardData.gimmicks)
+                {
+                    switch (item.gimmickType)
+                    {
+                        case "None":
+                            gimmickSet[0] = true;
+                            break;
+                        default:
+                            break;
+                    }
+                }
                 selectedColorIndex = (int)currentData.color;
                 //if(selectedColorIndex > 0 && CheckColorLRTB(boardData.col, boardData.row))
                 //{
@@ -547,6 +580,7 @@ public class MapEditor : EditorWindow
                             tempTile.col = x;
                             tempTile.row = y;
                             tempTile.colorTypes = currentLevelDataSO.boardBlocks[count].colorType;
+                            //tempTile.gimmicks = currentLevelDataSO.playingBlocks[]
                             count++;
                         }
                         // 문 
@@ -588,6 +622,7 @@ public class MapEditor : EditorWindow
                     foreach(var shapes in pBlocks.shapes)
                     {
                         tileData[pBlocks.center.y + shapes.offset.y + 1][pBlocks.center.x + shapes.offset.x + 1].color = pBlocks.colorType;
+                        tileData[pBlocks.center.y + shapes.offset.y + 1][pBlocks.center.x + shapes.offset.x + 1].gimmicks = pBlocks.gimmicks;
                     }
                 }
             }

@@ -30,6 +30,10 @@ MonoBehaviour:
     y: 0
     colorType: 
     dataType: 
+  - x: 4
+    y: 0
+    colorType: 
+    dataType: 
   - x: 0
     y: 1
     colorType: 
@@ -46,6 +50,10 @@ MonoBehaviour:
     y: 1
     colorType: 
     dataType: 
+  - x: 4
+    y: 1
+    colorType: 
+    dataType: 
   - x: 0
     y: 2
     colorType: 
@@ -62,6 +70,10 @@ MonoBehaviour:
     y: 2
     colorType: 
     dataType: 
+  - x: 4
+    y: 2
+    colorType: 
+    dataType: 
   - x: 0
     y: 3
     colorType: 
@@ -76,6 +88,30 @@ MonoBehaviour:
     dataType: 
   - x: 3
     y: 3
+    colorType: 
+    dataType: 
+  - x: 4
+    y: 3
+    colorType: 
+    dataType: 
+  - x: 0
+    y: 4
+    colorType: 
+    dataType: 
+  - x: 1
+    y: 4
+    colorType: 
+    dataType: 
+  - x: 2
+    y: 4
+    colorType: 
+    dataType: 
+  - x: 3
+    y: 4
+    colorType: 
+    dataType: 
+  - x: 4
+    y: 4
     colorType: 
     dataType: 
   playingBlocks:
@@ -85,8 +121,8 @@ MonoBehaviour:
     uniqueIndex: 0
     colorType: 2
     shapes:
-    - offset: {x: 0, y: 1}
     - offset: {x: 0, y: 0}
+    - offset: {x: 0, y: 1}
     gimmicks:
     - gimmickType: None
   - x: 0
@@ -95,11 +131,11 @@ MonoBehaviour:
     uniqueIndex: 1
     colorType: 6
     shapes:
-    - offset: {x: -1, y: 0}
-    - offset: {x: 0, y: -1}
     - offset: {x: 0, y: 0}
-    - offset: {x: 1, y: 0}
     - offset: {x: 0, y: 1}
+    - offset: {x: 0, y: -1}
+    - offset: {x: 1, y: 0}
+    - offset: {x: -1, y: 0}
     gimmicks:
     - gimmickType: None
   - x: 0
@@ -135,15 +171,15 @@ MonoBehaviour:
     - offset: {x: 1, y: -1}
     gimmicks:
     - gimmickType: None
-  - x: 3
+  - x: 0
     y: 0
     center: {x: 4, y: 4}
     uniqueIndex: 5
     colorType: 4
     shapes:
     - offset: {x: 0, y: 0}
-    - offset: {x: 0, y: -2}
     - offset: {x: 0, y: -1}
+    - offset: {x: 0, y: -2}
     gimmicks:
     - gimmickType: None
   Walls:
