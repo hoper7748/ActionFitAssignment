@@ -125,7 +125,8 @@ public class MapEditor : EditorWindow
     }
 
     private void CreateMyDataAsset()
-    {        // 인스턴스 생성
+    {       
+
         StageData asset = ScriptableObject.CreateInstance<StageData>();
 
         // 경로 설정
@@ -271,16 +272,7 @@ public class MapEditor : EditorWindow
             }
             else if (selectedColorIndex > 0 && !PlayerBlocks.ContainsKey((ColorType)selectedColorIndex))
             {
-                //PlayingBlockData data = new PlayingBlockData();
-                //data.center = new Vector2Int(boardData.col, boardData.row);
-                //tempShapeData = new ShapeData();
-                //tempShapeData.offset = Vector2Int.zero;
-                //data.shapes = new List<ShapeData>();
-                //data.shapes.Add(tempShapeData);
-                //PlayerBlocks.Add((ColorType)selectedColorIndex, data);
-
-                //boardData.color = (ColorType)selectedColorIndex;
-                Debug.Log("EmptyColor");
+                Debug.Log("Empty Color");
             }
         }
 
@@ -419,58 +411,6 @@ public class MapEditor : EditorWindow
                     }
                 }
                 selectedColorIndex = (int)currentData.color;
-                //if(selectedColorIndex > 0 && CheckColorLRTB(boardData.col, boardData.row))
-                //{
-                //    tempShapeData = new ShapeData();
-                //    selectedBoardPosition = new Vector2Int(boardData.col - 1, boardData.row - 1);
-                //    tempShapeData.offset -= PlayerBlocks[(ColorType)selectedColorIndex].center - selectedBoardPosition;
-                //    // 연결된 색이 있다면 현재 타일의 색을 체크 해야함 만약 색이 있다면 컨테이너에서 지워주고 색을 칠해줘야함.
-                //    if (PlayerBlocks.ContainsKey(boardData.color))
-                //    {
-                //        Debug.Log("선택된 타일에 다른 색이 존재");
-                //        foreach(var item in PlayerBlocks[boardData.color].shapes)
-                //        {
-                //            if(item.offset + PlayerBlocks[boardData.color].center == selectedBoardPosition)
-                //            {
-                //                PlayerBlocks[boardData.color].shapes.Remove(item);
-                //                break;
-                //            }
-                //        }
-                //    }
-                //    boardData.color = (ColorType)selectedColorIndex;
-                //    // 연결된 색이 없으면 그냥 색 칠하고 Shape에 추가;
-                //    if (selectedColorIndex > 0 && !PlayerBlocks[(ColorType)selectedColorIndex].shapes.Contains(tempShapeData))
-                //        PlayerBlocks[(ColorType)selectedColorIndex].shapes.Add(tempShapeData);
-                //}
-                //else if(selectedColorIndex == 0)
-                //{
-                //    if (PlayerBlocks.ContainsKey(boardData.color))
-                //    {
-                //        Debug.Log("선택된 타일에 다른 색이 존재");
-                //        foreach (var item in PlayerBlocks[boardData.color].shapes)
-                //        {
-                //            if (item.offset + PlayerBlocks[boardData.color].center == selectedBoardPosition)
-                //            {
-                //                PlayerBlocks[boardData.color].shapes.Remove(item);
-                //                break;
-                //            }
-                //        }
-                //    }
-                //    boardData.color = (ColorType)selectedColorIndex;
-                //}
-                //else if(selectedColorIndex > 0 && !PlayerBlocks.ContainsKey((ColorType)selectedColorIndex))
-                //{
-                //    //PlayingBlockData data = new PlayingBlockData();
-                //    //data.center = new Vector2Int(boardData.col, boardData.row);
-                //    //tempShapeData = new ShapeData();
-                //    //tempShapeData.offset = Vector2Int.zero;
-                //    //data.shapes = new List<ShapeData>();
-                //    //data.shapes.Add(tempShapeData);
-                //    //PlayerBlocks.Add((ColorType)selectedColorIndex, data);
-
-                //    //boardData.color = (ColorType)selectedColorIndex;
-                //    //Debug.Log("EmptyColor");
-                //}
             }
         }
         else if (!(boardData.row == 0 && boardData.col == 0) && !(boardData.row == 0 && boardData.col == column + 2) &&
@@ -580,7 +520,6 @@ public class MapEditor : EditorWindow
                             tempTile.col = x;
                             tempTile.row = y;
                             tempTile.colorTypes = currentLevelDataSO.boardBlocks[count].colorType;
-                            //tempTile.gimmicks = currentLevelDataSO.playingBlocks[]
                             count++;
                         }
                         // 문 
@@ -598,13 +537,11 @@ public class MapEditor : EditorWindow
                 {
                     InitWall(0, y);
                     InitWall(column, y);
-                    //tileData[y][0]
                 }
                 for (int x = 1; x < column + 2; x++)
                 {
                     InitWall(x, 0);
                     InitWall(x, row);
-                    //tileData[y][0]
                 }
                 PlayerBlocks.Clear();
 
@@ -630,7 +567,6 @@ public class MapEditor : EditorWindow
     }
 
     Dictionary<ColorType, PlayingBlockData> PlayerBlocks = new Dictionary<ColorType, PlayingBlockData>();
-    //Dictionary<ColorType, List<WallData>>
 
     List<WallData> WallContainer = new List<WallData>();
 
@@ -638,7 +574,6 @@ public class MapEditor : EditorWindow
     {
         for (int i = 0; i < currentLevelDataSO.Walls.Count; i++)
         {
-            //if (SetWall(currentLevelDataSO.Walls[i], x, y)) return;
             if (x == 0 || x == column)
             {
                 int iy = y - 1;

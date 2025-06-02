@@ -13,7 +13,7 @@ public class DragInputHandler : MonoBehaviour
 
     public void Update()
     {
-        // 입력 조건 처리 예: ESC 눌렀을 때 드래그 취소 등
+
     }
 
     public void OnMouseDown()
